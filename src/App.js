@@ -5,11 +5,14 @@ import { render } from "react-dom";
 class App extends Component {
   constructor(props) {
     super(props);
-
-    this.getData(this.setGraph);
+    this.state = {
+      id: 0,
+      nodeCount: 10
+    };
+    this.getData(this.state.nodeCount);
   }
 
-  getData(callback) {
+  getData(nodeCount) {
     var response;
     var xhttp = new XMLHttpRequest();
     xhttp.onload  = function () {
@@ -19,7 +22,7 @@ class App extends Component {
             this.setGraph(response);
         }
     }.bind(this);
-    xhttp.open("GET", "http://localhost:8080/api/generate/10", false);
+    xhttp.open("GET", "http://localhost:8080/api/generate/" + nodeCount.toString(), false);
     xhttp.send();
   }
 
@@ -81,14 +84,43 @@ class App extends Component {
     }
   }
 
+  generateGraph() {
+    this.getData(this.state.nodeCount);
+    this.setState(prevState => ({
+      id: prevState.id++
+    }));
+  }
+
+  updateNodeCount(evt) {
+    this.setState({
+      nodeCount: evt.target.value
+    })
+  }
+
   render() {
     return (
       <div style={{ height: "100%" }}> 
         <div className="row" style={{ height: "100%" }}>
-          <div className="col-lg-3" style={{ height: "100%" }}>
-            <button>hi</button>
+          <div className="col-lg-3 col-md-3 col-sm-3" style={{ height: "100%" }}>
+
+            <div style= {{ marginTop: "100px" }}>
+              <div className="form-group">
+                <input value={this.state.nodeCount} onChange={this.updateNodeCount.bind(this)} type="text" className="form-control" placeholder="# of nodes" />
+              </div>
+              <button type="button" className="btn btn-primary" onClick={this.generateGraph.bind(this)}>Generate</button>
+            </div>
+
+            <div style= {{ marginTop: "100px" }}>
+              <div className="form-group">
+                <input  type="text" className="form-control" placeholder="Starting node" />
+              </div>
+              <button type="button" className="btn btn-primary">Solve</button>
+            </div>
+
+            
+            
           </div>
-          <div className="col-lg-8" style={{ height: "100%"}}>
+          <div className="col-lg-8 col-md-8 col-sm-8" style={{ height: "100%"}}>
             <Graph graph={this.graph} options={this.options} events={this.events}  />
           </div>
         </div>
