@@ -7,7 +7,8 @@ class App extends Component {
     super(props);
     this.state = {
       id: 0,
-      nodeCount: 10
+      nodeCount: 10,
+      startNode: 1
     };
     this.getData(this.state.nodeCount);
   }
@@ -28,6 +29,7 @@ class App extends Component {
 
   setGraph(graph) {
     graph = JSON.parse(graph);
+    this.originalGraph = graph;
 
     this.graph = {
       nodes: [],
@@ -91,9 +93,30 @@ class App extends Component {
     }));
   }
 
+  getShortestPath() {
+    var response;
+    var xhttp = new XMLHttpRequest();
+    xhttp.onload  = function () {
+        if (xhttp.readyState === 4 && xhttp.status === 200)
+        {
+            response = xhttp.responseText;
+        }
+    }.bind(this);
+    xhttp.open("POST", "http://localhost:8080/api/solve/" + this.state.startNode.toString(), false);
+    xhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+    var data = JSON.stringify(this.originalGraph);
+    xhttp.send(data);
+  }
+
   updateNodeCount(evt) {
     this.setState({
       nodeCount: evt.target.value
+    })
+  }
+
+  updateStartNode(evt) {
+    this.setState({
+      startNode: evt.target.value
     })
   }
 
@@ -112,9 +135,9 @@ class App extends Component {
 
             <div style= {{ marginTop: "100px" }}>
               <div className="form-group">
-                <input  type="text" className="form-control" placeholder="Starting node" />
+                <input value={this.state.startNode} onChange={this.updateStartNode.bind(this)} type="text" className="form-control" placeholder="Starting node" />
               </div>
-              <button type="button" className="btn btn-primary">Solve</button>
+              <button type="button" className="btn btn-primary" onClick={this.getShortestPath.bind(this)}>Solve</button>
             </div>
 
             
