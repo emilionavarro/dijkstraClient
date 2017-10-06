@@ -93,7 +93,7 @@ class App extends Component {
     }));
   }
 
-  getShortestPath() {
+  solve() {
     var response;
     var xhttp = new XMLHttpRequest();
     xhttp.onload  = function () {
@@ -137,7 +137,7 @@ class App extends Component {
               <div className="form-group">
                 <input value={this.state.startNode} onChange={this.updateStartNode.bind(this)} type="text" className="form-control" placeholder="Starting node" />
               </div>
-              <button type="button" className="btn btn-primary" onClick={this.getShortestPath.bind(this)}>Solve</button>
+              <button type="button" className="btn btn-primary" onClick={this.solve.bind(this)}>Solve</button>
             </div>
 
             
