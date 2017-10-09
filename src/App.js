@@ -23,12 +23,6 @@ class App extends Component {
         {
             response = xhttp.responseText;
             this.setGraph(response);
-
-            this.setState(prevState => ({
-              id: prevState.id++,
-              solved: false,
-              forceRender: false
-            }));
         }
     }.bind(this);
     xhttp.open("GET", "http://localhost:8080/api/generate/" + nodeCount.toString(), false);
@@ -152,6 +146,12 @@ class App extends Component {
 
   generateGraph() {
     this.getData(this.state.nodeCount);
+
+    this.setState(prevState => ({
+      id: prevState.id++,
+      solved: false,
+      forceRender: false
+    }));
   }
 
   solve() {
