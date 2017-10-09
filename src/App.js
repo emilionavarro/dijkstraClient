@@ -76,7 +76,7 @@ class App extends Component {
         }
       },
       physics: {
-        enabled: false
+        enabled: true
       }
     };
 
