@@ -7,8 +7,10 @@ class App extends Component {
     super(props);
     this.state = {
       id: 0,
-      nodeCount: 10,
-      startNode: 1
+      nodeCount: 4,
+      startNode: 1, 
+      solved: false,
+      pathTo: 1,
     };
     this.getData(this.state.nodeCount);
   }
@@ -21,6 +23,12 @@ class App extends Component {
         {
             response = xhttp.responseText;
             this.setGraph(response);
+
+            this.setState(prevState => ({
+              id: prevState.id++,
+              solved: false,
+              forceRender: false
+            }));
         }
     }.bind(this);
     xhttp.open("GET", "http://localhost:8080/api/generate/" + nodeCount.toString(), false);
@@ -60,8 +68,12 @@ class App extends Component {
       layout: {
         hierarchical: false
       },
+      nodes: {
+        chosen: true
+      },
       edges: {
         color: "#000000",
+        chosen: false,
         arrows: {
           to: {
             enabled: false,
@@ -70,27 +82,76 @@ class App extends Component {
         }
       },
       physics: {
-        enabled: true,
-        repulsion: 1
+        enabled: false
       }
     };
 
     this.events = {
       select: function(event) {
         var { nodes, edges } = event;
-        console.log("Selected nodes:");
-        console.log(nodes);
-        console.log("Selected edges:");
-        console.log(edges);
-      }
+
+        if (this.state.solved && nodes.length > 0) {
+          var path = this.getPath(nodes[0]);
+          this.updateGraph(path);
+
+          this.setState({
+            forceRender: true
+          });
+
+        }
+      }.bind(this)
     }
+  }
+
+  updateGraph (path) {
+    var edge = void 0;
+    //reset all edge colors to black
+    for (var i = 0, len = this.graph.edges.length; i < len; i++) {
+      this.graph.edges[i].color = "#000000";
+    }
+    
+    //color path edges to red
+    for(var i = 0, len = (path.length - 1); i < len; i++) {    
+      edge = this.setPathEdge(path[i], path[i + 1]);
+    }
+  }
+  
+  setPathEdge (startNodeId, endNodeId) {
+    var edge = void 0;
+    var foundEdge = null;
+
+    for(var i = 0, len = this.graph.edges.length; i < len; i++) {
+      edge = this.graph.edges[i];
+      if ((edge.from === startNodeId && edge.to === endNodeId) || 
+        (edge.to === startNodeId && edge.from === endNodeId)) {
+          foundEdge = edge;
+          edge.color = "#ff0000";
+        }
+    }
+
+    return foundEdge;
+  }
+
+  getPath(currentNodeId) {
+    var path = [];
+    var currentNode = void 0;
+
+    while(currentNodeId !== this.state.startNode) {
+      path.splice(0, 0, currentNodeId);
+      currentNode = this.solvedGraph.nodes[currentNodeId - 1];
+      if (currentNode.sourceId === 0) {
+        break;
+      } else {
+        currentNodeId = currentNode.sourceId;
+      }      
+    }
+
+    path.splice(0, 0, currentNodeId);
+    return path;
   }
 
   generateGraph() {
     this.getData(this.state.nodeCount);
-    this.setState(prevState => ({
-      id: prevState.id++
-    }));
   }
 
   solve() {
@@ -100,6 +161,11 @@ class App extends Component {
         if (xhttp.readyState === 4 && xhttp.status === 200)
         {
             response = xhttp.responseText;
+            this.solvedGraph = JSON.parse(response);
+            this.setState({
+              solved: true,
+              forceRender: true
+            });
         }
     }.bind(this);
     xhttp.open("POST", "http://localhost:8080/api/solve/" + this.state.startNode.toString(), false);
@@ -111,13 +177,13 @@ class App extends Component {
   updateNodeCount(evt) {
     this.setState({
       nodeCount: evt.target.value
-    })
+    });
   }
 
   updateStartNode(evt) {
     this.setState({
       startNode: evt.target.value
-    })
+    });
   }
 
   render() {
@@ -144,7 +210,7 @@ class App extends Component {
             
           </div>
           <div className="col-lg-8 col-md-8 col-sm-8" style={{ height: "100%"}}>
-            <Graph graph={this.graph} options={this.options} events={this.events}  />
+            <Graph forceRender={this.state.forceRender} graph={this.graph} options={this.options} events={this.events}  />
           </div>
         </div>
       </div>      
